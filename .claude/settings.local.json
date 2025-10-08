@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(chmod:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(/Users/tranphu/Documents/projects/chrome-bridge-mcp/.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(.specify/scripts/bash/update-agent-context:*)",
+      "Bash(./.specify/scripts/bash/check-prerequisites.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

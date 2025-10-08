@@ -1,0 +1,807 @@
+# MCP Tools Contracts
+# OpenAPI 3.0.0 specification for MCP server tools
+
+openapi: 3.0.0
+info:
+  title: Chrome Bridge MCP Tools
+  description: MCP tools for Chrome Extension session management and data access
+  version: 1.0.0
+
+paths:
+  # Session Management Tools
+  /tools/start_session:
+    post:
+      summary: Start a new tracking session
+      operationId: startSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      responses:
+        '200':
+          description: Session started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartSessionResponse'
+        '400':
+          description: Invalid request parameters
+
+  /tools/stop_session:
+    post:
+      summary: Stop an active tracking session
+      operationId: stopSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopSessionRequest'
+      responses:
+        '200':
+          description: Session stopped successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopSessionResponse'
+        '404':
+          description: Session not found
+
+  /tools/list_sessions:
+    post:
+      summary: List available extension sessions
+      operationId: listSessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListSessionsRequest'
+      responses:
+        '200':
+          description: Sessions listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSessionsResponse'
+
+  /tools/get_session:
+    post:
+      summary: Get complete session data
+      operationId: getSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSessionRequest'
+      responses:
+        '200':
+          description: Session data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSessionResponse'
+        '404':
+          description: Session not found
+
+  # Data Query Tools
+  /tools/query_events:
+    post:
+      summary: Query captured events
+      operationId: queryEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryEventsRequest'
+      responses:
+        '200':
+          description: Events queried successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryEventsResponse'
+
+  /tools/query_logs:
+    post:
+      summary: Query console logs
+      operationId: queryLogs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryLogsRequest'
+      responses:
+        '200':
+          description: Logs queried successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryLogsResponse'
+
+  /tools/query_network:
+    post:
+      summary: Query network requests
+      operationId: queryNetwork
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryNetworkRequest'
+      responses:
+        '200':
+          description: Network requests queried successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryNetworkResponse'
+
+  /tools/query_screenshots:
+    post:
+      summary: Query screenshots
+      operationId: queryScreenshots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryScreenshotsRequest'
+      responses:
+        '200':
+          description: Screenshots queried successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryScreenshotsResponse'
+
+  # Extension Control Tools
+  /tools/capture_screenshot:
+    post:
+      summary: Capture a screenshot manually
+      operationId: captureScreenshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureScreenshotRequest'
+      responses:
+        '200':
+          description: Screenshot captured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaptureScreenshotResponse'
+        '404':
+          description: Session not found or inactive
+
+  /tools/export_session:
+    post:
+      summary: Export session data as JSON
+      operationId: exportSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportSessionRequest'
+      responses:
+        '200':
+          description: Session exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportSessionResponse'
+        '404':
+          description: Session not found
+
+components:
+  schemas:
+    # Request Schemas
+    StartSessionRequest:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          type: string
+          format: uri
+          description: Domain to track
+        title:
+          type: string
+          description: Optional session title
+        description:
+          type: string
+          description: Optional session description
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional session tags
+
+    StopSessionRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to stop
+
+    ListSessionsRequest:
+      type: object
+      properties:
+        domain:
+          type: string
+          format: uri
+          description: Filter by domain
+        status:
+          type: string
+          enum: [active, completed, error]
+          description: Filter by status
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum number of sessions to return
+
+    GetSessionRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to retrieve
+        includeEvents:
+          type: boolean
+          default: true
+          description: Include captured events
+        includeLogs:
+          type: boolean
+          default: true
+          description: Include console logs
+        includeNetwork:
+          type: boolean
+          default: true
+          description: Include network requests
+        includeScreenshots:
+          type: boolean
+          default: true
+          description: Include screenshots
+
+    QueryEventsRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to query
+        type:
+          type: string
+          enum: [click, input, navigation, scroll]
+          description: Filter by event type
+        startTime:
+          type: integer
+          format: int64
+          description: Start timestamp filter
+        endTime:
+          type: integer
+          format: int64
+          description: End timestamp filter
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of events to return
+
+    QueryLogsRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to query
+        level:
+          type: string
+          enum: [log, error, warn, info]
+          description: Filter by log level
+        source:
+          type: string
+          description: Filter by source file pattern
+        startTime:
+          type: integer
+          format: int64
+          description: Start timestamp filter
+        endTime:
+          type: integer
+          format: int64
+          description: End timestamp filter
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of logs to return
+
+    QueryNetworkRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to query
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS]
+          description: Filter by HTTP method
+        urlPattern:
+          type: string
+          description: Filter by URL regex pattern
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+          description: Filter by HTTP status code
+        startTime:
+          type: integer
+          format: int64
+          description: Start timestamp filter
+        endTime:
+          type: integer
+          format: int64
+          description: End timestamp filter
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of requests to return
+
+    QueryScreenshotsRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to query
+        trigger:
+          type: string
+          enum: [manual, automatic, event]
+          description: Filter by trigger type
+        startTime:
+          type: integer
+          format: int64
+          description: Start timestamp filter
+        endTime:
+          type: integer
+          format: int64
+          description: End timestamp filter
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum number of screenshots to return
+
+    CaptureScreenshotRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to capture screenshot for
+
+    ExportSessionRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID to export
+        format:
+          type: string
+          enum: [json]
+          default: json
+          description: Export format
+
+    # Response Schemas
+    StartSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: ID of the created session
+        status:
+          type: string
+          enum: [active, error]
+          description: Session status
+        message:
+          type: string
+          description: Status message
+
+    StopSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: ID of the stopped session
+        status:
+          type: string
+          enum: [completed, error]
+          description: Final session status
+        message:
+          type: string
+          description: Status message
+
+    ListSessionsResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+        total:
+          type: integer
+          description: Total number of sessions matching criteria
+
+    GetSessionResponse:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/ExtensionSession'
+
+    QueryEventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapturedEvent'
+        total:
+          type: integer
+          description: Total number of events matching criteria
+
+    QueryLogsResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsoleLogEntry'
+        total:
+          type: integer
+          description: Total number of logs matching criteria
+
+    QueryNetworkResponse:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkRequest'
+        total:
+          type: integer
+          description: Total number of requests matching criteria
+
+    QueryScreenshotsResponse:
+      type: object
+      properties:
+        screenshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Screenshot'
+        total:
+          type: integer
+          description: Total number of screenshots matching criteria
+
+    CaptureScreenshotResponse:
+      type: object
+      properties:
+        screenshotId:
+          type: string
+          format: uuid
+          description: ID of the captured screenshot
+        timestamp:
+          type: integer
+          format: int64
+          description: Screenshot timestamp
+        message:
+          type: string
+          description: Status message
+
+    ExportSessionResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          description: Exported session data (JSON string)
+        format:
+          type: string
+          description: Export format
+        size:
+          type: integer
+          description: Size of exported data in bytes
+
+    # Data Schemas
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Session ID
+        domain:
+          type: string
+          description: Domain being tracked
+        status:
+          type: string
+          enum: [active, completed, error]
+          description: Session status
+        createdAt:
+          type: integer
+          format: int64
+          description: Creation timestamp
+        updatedAt:
+          type: integer
+          format: int64
+          description: Last update timestamp
+        eventCount:
+          type: integer
+          description: Number of captured events
+        logCount:
+          type: integer
+          description: Number of console logs
+        networkCount:
+          type: integer
+          description: Number of network requests
+        screenshotCount:
+          type: integer
+          description: Number of screenshots
+
+    ExtensionSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Session ID
+        domain:
+          type: string
+          description: Domain being tracked
+        status:
+          type: string
+          enum: [active, completed, error]
+          description: Session status
+        createdAt:
+          type: integer
+          format: int64
+          description: Creation timestamp
+        updatedAt:
+          type: integer
+          format: int64
+          description: Last update timestamp
+        metadata:
+          $ref: '#/components/schemas/SessionMetadata'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapturedEvent'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsoleLogEntry'
+        network:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkRequest'
+        screenshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Screenshot'
+
+    SessionMetadata:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Session title
+        description:
+          type: string
+          description: Session description
+        tags:
+          type: array
+          items:
+            type: string
+          description: Session tags
+        browserInfo:
+          $ref: '#/components/schemas/BrowserInfo'
+
+    BrowserInfo:
+      type: object
+      properties:
+        userAgent:
+          type: string
+          description: Browser user agent
+        version:
+          type: string
+          description: Browser version
+        platform:
+          type: string
+          description: Operating system
+        screenResolution:
+          type: string
+          description: Screen dimensions
+
+    CapturedEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Event ID
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID
+        type:
+          type: string
+          enum: [click, input, navigation, scroll]
+          description: Event type
+        timestamp:
+          type: integer
+          format: int64
+          description: Event timestamp
+        target:
+          $ref: '#/components/schemas/EventTarget'
+        data:
+          type: object
+          description: Event-specific data
+
+    EventTarget:
+      type: object
+      properties:
+        selector:
+          type: string
+          description: CSS selector
+        tagName:
+          type: string
+          description: HTML tag name
+        className:
+          type: string
+          description: Element class name
+        id:
+          type: string
+          description: Element ID
+        text:
+          type: string
+          description: Element text content
+        value:
+          type: string
+          description: Element value
+
+    ConsoleLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Log ID
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID
+        type:
+          type: string
+          enum: [log, error, warn, info]
+          description: Log level
+        timestamp:
+          type: integer
+          format: int64
+          description: Log timestamp
+        message:
+          type: string
+          description: Log message
+        source:
+          type: string
+          description: Source file
+        stackTrace:
+          type: string
+          description: Stack trace (for errors)
+
+    NetworkRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Request ID
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS]
+          description: HTTP method
+        url:
+          type: string
+          description: Request URL
+        timestamp:
+          type: integer
+          format: int64
+          description: Request timestamp
+        status:
+          type: integer
+          description: HTTP status code
+        requestHeaders:
+          type: object
+          additionalProperties:
+            type: string
+          description: Request headers
+        responseHeaders:
+          type: object
+          additionalProperties:
+            type: string
+          description: Response headers
+        requestBody:
+          type: string
+          description: Request body
+        responseBody:
+          type: string
+          description: Response body
+        duration:
+          type: integer
+          description: Request duration in milliseconds
+
+    Screenshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Screenshot ID
+        sessionId:
+          type: string
+          format: uuid
+          description: Session ID
+        timestamp:
+          type: integer
+          format: int64
+          description: Screenshot timestamp
+        data:
+          type: string
+          description: Base64 image data
+        width:
+          type: integer
+          description: Image width
+        height:
+          type: integer
+          description: Image height
+        format:
+          type: string
+          enum: [png, jpeg]
+          description: Image format
+        trigger:
+          type: string
+          enum: [manual, automatic, event]
+          description: Trigger type
